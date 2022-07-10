@@ -14,7 +14,7 @@ class PullProgressPrinter(git.RemoteProgress):
     }
 
     def _toggle(self, op_code, bit_num):
-        return (op_code ^ (1 << (bit_num- 1)))
+        return (op_code ^ (1 << (bit_num - 1)))
     
     def _decode_opcode(self, op_code):
         if op_code & 1:
@@ -29,9 +29,12 @@ class PullProgressPrinter(git.RemoteProgress):
         start_end, op_code = self._decode_opcode(op_code)
 
         operation = self.code.get(op_code, op_code)
-        percentage = cur_count / (max_count or 100.0) 
+        percentage = cur_count / (max_count or 100.0)
 
-        print(f"{operation} item {cur_count} of {max_count} ({percentage * 100} %)")
+        if start_end != 2:
+            print(f"{operation} - item {cur_count} of {max_count} ({round(percentage * 100, 2)} %)")
+        else:
+            print(f"{operation} - Done.")
 
         if message:
             print(message)
@@ -47,12 +50,12 @@ def git_pull(subdir):
     
     try:
         if not os.path.exists(subdir):
-            return
+            return 'Skipped'
         
         os.chdir(subdir)
         
         if not os.path.exists('.git'):
-            return
+            return 'Skipped'
         
         location = os.path.abspath(subdir)
         print(f'Updating {location}...')            
@@ -60,16 +63,27 @@ def git_pull(subdir):
         origin = repo.remotes.origin
         origin.pull(progress=PullProgressPrinter(), prune=True)
         print(f'Updated.')
+        return 'Updated'
     
     except Exception as e:
         print(f'Update error: {e}')
+        return 'Error'
     
     finally:
         os.chdir(root)    
 
 def main():
+    summary = []
+
     for dir in list_dirs(os.path.curdir):
-        git_pull(dir)
+        summary.append((dir, git_pull(dir)))
+
+    print()
+    print('Summary:')
+    print('------------------------------')
+    
+    for s in summary:
+        print(f'{s[0]}: {s[1]}.')        
 
 if __name__ == '__main__':
     main()
