@@ -33,9 +33,9 @@ class PullProgressPrinter(git.RemoteProgress):
 
         if start_end != 2:
             if max_count:
-                print(f"{operation} - item {cur_count} of {max_count} ({round(percentage * 100, 2)} %) {message}")
+                print(f"{operation} - {cur_count} of {max_count} ({round(percentage * 100, 2)} %) {message}")
             else:
-                print(f"{operation} - item {cur_count} {message}")
+                print(f"{operation} - current {cur_count} {message}")
 
         else:
             print(f"{operation} - Done.")
@@ -87,6 +87,9 @@ def print_summary(summary):
     
 
 def main():
+    print('GitPull - git pull from origin for all repositories under the current directory.')
+    print()
+    
     summary = []
 
     for dir in list_dirs(os.path.curdir):
