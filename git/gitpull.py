@@ -29,16 +29,17 @@ class PullProgressPrinter(git.RemoteProgress):
         start_end, op_code = self._decode_opcode(op_code)
 
         operation = self.code.get(op_code, op_code)
-        percentage = cur_count / (max_count or 100.0)
+        percentage = cur_count / (max_count or 100.0) if cur_count != max_count else 1
+        percentageStr = f"{round(percentage * 100, 2):.2f}%" if percentage != 1 else "100%"
 
         if start_end != 2:
             if max_count:
-                print(f"{operation} - {cur_count} of {max_count} ({round(percentage * 100, 2)} %) {message}")
+                print(f"{operation}: {percentageStr} ({cur_count:.0f}/{max_count:.0f}) {message}")
             else:
-                print(f"{operation} - current {cur_count} {message}")
+                print(f"{operation}: current {cur_count:.0f} {message}")
 
         else:
-            print(f"{operation} - Done.")
+            print(f"{operation}: Done.")
 
 def list_dirs(folder):
     return [
