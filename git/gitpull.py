@@ -60,12 +60,14 @@ def git_pull(subdir):
             return 'Skipped'
 
         location = os.path.abspath('.')
-        print(f'Updating {location}...')
         repo = git.Repo('.')
+        branch = repo.active_branch.name
         origin = repo.remotes.origin
+        
+        print(f'Updating {location} ({branch})...')
         origin.pull(progress=PullProgressPrinter(), prune=True)
-        print(f'{location} Updated.')
-        return 'Updated'
+        print(f'{location} ({branch}) Updated.')
+        return f'Updated ({branch})'
 
     except Exception as e:
         print(f'Error: {e}')
