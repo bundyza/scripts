@@ -1,9 +1,20 @@
-#pip install gitpython
-import git
 from typing import Union
 import os
 import os.path
+import argparse
 
+#pip install gitpython
+import git
+
+# General purpose helpers
+def list_dirs(folder):
+    return [
+        d for d in (os.path.join(folder, d1) for d1 in os.listdir(folder))
+        if os.path.isdir(d)
+    ]
+
+
+# Git pull commandlet implementation
 class PullProgressPrinter(git.RemoteProgress):
 
     code = {
@@ -41,12 +52,6 @@ class PullProgressPrinter(git.RemoteProgress):
         else:
             print(f"{operation}: Done.")
 
-def list_dirs(folder):
-    return [
-        d for d in (os.path.join(folder, d1) for d1 in os.listdir(folder))
-        if os.path.isdir(d)
-    ]
-
 def git_pull(subdir):
     root = os.getcwd()
 
@@ -76,21 +81,20 @@ def git_pull(subdir):
     finally:
         os.chdir(root)
         
-def print_summary(summary):
+def print_pull_summary(summary):
     print()
-    print('GitPull Summary:')
+    print('GitCmd - Pull Summary:')
     print('----------------')
     
     length = len(max((s[0] for s in summary), key=len)) + 3
     
     for s in summary:
         repo = s[0] + ':'
-        line = f'{repo:{length}} {s[1]}'
-        print(line)        
-    
+        line = f'{repo:{length}} | {s[1]}'
+        print(line)
 
-def main():
-    print('GitPull - git pull from origin for all repositories under the current directory.')
+def run_pull_commandlet():
+    print('GitCmd - git pull from origin for all repositories under the current directory.')
     print()
     
     summary = []
@@ -98,7 +102,19 @@ def main():
     for dir in list_dirs(os.path.curdir):
         summary.append((dir, git_pull(dir)))
 
-    print_summary(summary)
+    print_pull_summary(summary)
+
+# Commandlet setup
+def create_parser():
+    result = argparse.ArgumentParser(description='gitcmd - Git commandlet utility.')
+    return result
+
+def run_commandlets(parser):
+    run_pull_commandlet()
+
+def main():
+    parser = create_parser()
+    run_commandlets(parser)
 
 if __name__ == '__main__':
     main()
