@@ -7,6 +7,7 @@ import argparse
 import git
 
 # General purpose helpers
+#------------------------
 def list_dirs(folder):
     return [
         d for d in (os.path.join(folder, d1) for d1 in os.listdir(folder))
@@ -15,6 +16,7 @@ def list_dirs(folder):
 
 
 # Git pull commandlet implementation
+# ----------------------------------
 class PullProgressPrinter(git.RemoteProgress):
 
     code = {
@@ -57,12 +59,12 @@ def git_pull(subdir):
 
     try:
         if not os.path.exists(subdir):
-            return 'Skipped'
+            return 'Skipped (not found)'
 
         os.chdir(subdir)
 
         if not os.path.exists('.git'):
-            return 'Skipped'
+            return 'Skipped (not a git repository)'
 
         location = os.path.abspath('.')
         repo = git.Repo('.')
@@ -72,7 +74,7 @@ def git_pull(subdir):
         print(f'Updating {location} ({branch})...')
         origin.pull(progress=PullProgressPrinter(), prune=True)
         print(f'{location} ({branch}) Updated.')
-        return f'Updated ({branch})'
+        return f'Updated (branch: {branch})'
 
     except Exception as e:
         print(f'Error: {e}')
@@ -82,9 +84,8 @@ def git_pull(subdir):
         os.chdir(root)
         
 def print_pull_summary(summary):
-    print()
     print('GitCmd - Pull Summary:')
-    print('----------------')
+    print('----------------------')
     
     length = len(max((s[0] for s in summary), key=len)) + 3
     
@@ -93,7 +94,7 @@ def print_pull_summary(summary):
         line = f'{repo:{length}} | {s[1]}'
         print(line)
 
-def run_pull_commandlet():
+def run_pull_commandlet(args):
     print('GitCmd - git pull from origin for all repositories under the current directory.')
     print()
     
@@ -102,19 +103,83 @@ def run_pull_commandlet():
     for dir in list_dirs(os.path.curdir):
         summary.append((dir, git_pull(dir)))
 
+    print()
     print_pull_summary(summary)
+
+
+# Git branches commandlet implementation
+# --------------------------------------
+def git_branches(subdir):
+    root = os.getcwd()
+
+    try:
+        if not os.path.exists(subdir):
+            return 'Skipped (not found)'
+
+        os.chdir(subdir)
+
+        if not os.path.exists('.git'):
+            return 'Skipped (not a git repository)'
+
+        repo = git.Repo('.')
+        result = repo.active_branch.name
+        return result
+
+    except Exception as e:
+        print(f'Error: {e}')
+        return 'Error'
+
+    finally:
+        os.chdir(root)
+
+def print_branches_summary(summary):
+    print('GitCmd - Branches Summary:')
+    print('--------------------------')
+    
+    length = len(max((s[0] for s in summary), key=len)) + 3
+    
+    for s in summary:
+        repo = s[0] + ':'
+        line = f'{repo:{length}} | {s[1]}'
+        print(line)        
+
+def run_branches_commandlet(args):
+    print('GitCmd - list the active branches for all repositories under the current directory.')
+    print()
+    
+    summary = []
+
+    for dir in list_dirs(os.path.curdir):
+        summary.append((dir, git_branches(dir)))
+
+    print_branches_summary(summary)
 
 # Commandlet setup
 def create_parser():
     result = argparse.ArgumentParser(description='gitcmd - Git commandlet utility.')
+
+    commandlet_choices = ['pull','branches']
+    result.add_argument('commandlet', type=str, help='The git commandlet to run for the repositories.', choices=commandlet_choices)
     return result
 
-def run_commandlets(parser):
-    run_pull_commandlet()
+def run_commandlets(args):
+    commandlets = {
+        'pull': run_pull_commandlet,
+        'branches': run_branches_commandlet
+    }
+
+    commandlet = args.commandlet
+    runnable = commandlets.get(commandlet.lower(), None)
+
+    if not runnable:
+        return
+
+    runnable(args)
 
 def main():
     parser = create_parser()
-    run_commandlets(parser)
+    args = parser.parse_args()
+    run_commandlets(args)
 
 if __name__ == '__main__':
     main()
