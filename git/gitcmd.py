@@ -102,7 +102,7 @@ def git_pull(subdir):
 
     return process_directory(subdir, impl)
 
-def run_pull_commandlet(args):
+def pull_commandlet(args):
     print('GitCmd - pull from origin for all repositories under the current directory.')
     print()
 
@@ -124,7 +124,7 @@ def git_branches(subdir):
 
     return process_directory(subdir, impl)
 
-def run_branches_commandlet(args):
+def branches_commandlet(args):
     print('GitCmd - list the active branches for all repositories under the current directory.')
     print()
 
@@ -146,8 +146,8 @@ def create_parser():
 
 def run_commandlets(args):
     commandlets = {
-        'pull': run_pull_commandlet,
-        'branches': run_branches_commandlet
+        'pull': pull_commandlet,
+        'branches': branches_commandlet
     }
 
     commandlet = args.commandlet
