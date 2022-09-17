@@ -36,6 +36,18 @@ def process_directory(subdir, handler):
     finally:
         os.chdir(current_dir)
 
+def print_simple_summary(title, summary):
+    header = f"GitCmd - {title}:"
+    print(header)
+    print('-' * len(header))
+
+    length = len(max((s[0] for s in summary), key=len)) + 3
+
+    for s in summary:
+        repo = s[0] + ':'
+        line = f' - {repo:{length}} | {s[1]}'
+        print(line)
+
 
 # Git pull commandlet implementation
 # ----------------------------------
@@ -69,12 +81,12 @@ class PullProgressPrinter(git.RemoteProgress):
 
         if start_end != 2:
             if max_count:
-                print(f"{operation}: {percentageStr} ({cur_count:.0f}/{max_count:.0f}) {message}")
+                print(f" - {operation}: {percentageStr} ({cur_count:.0f}/{max_count:.0f}) {message}")
             else:
-                print(f"{operation}: current {cur_count:.0f} {message}")
+                print(f" - {operation}: current {cur_count:.0f} {message}")
 
         else:
-            print(f"{operation}: Done.")
+            print(f" - {operation}: Done.")
 
 def git_pull(subdir):
 
@@ -90,17 +102,6 @@ def git_pull(subdir):
 
     return process_directory(subdir, impl)
 
-def print_pull_summary(summary):
-    print('GitCmd - Pull Summary:')
-    print('----------------------')
-
-    length = len(max((s[0] for s in summary), key=len)) + 3
-
-    for s in summary:
-        repo = s[0] + ':'
-        line = f'{repo:{length}} | {s[1]}'
-        print(line)
-
 def run_pull_commandlet(args):
     print('GitCmd - pull from origin for all repositories under the current directory.')
     print()
@@ -111,8 +112,7 @@ def run_pull_commandlet(args):
         summary.append((dir, git_pull(dir)))
 
     print()
-    print_pull_summary(summary)
-
+    print_simple_summary("Pull Summary", summary)
 
 # Git branches commandlet implementation
 # --------------------------------------
@@ -120,20 +120,9 @@ def git_branches(subdir):
 
     def impl(repo):
         result = repo.active_branch.name
-        return result
+        return f"branch: {result}"
 
     return process_directory(subdir, impl)
-
-def print_branches_summary(summary):
-    print('GitCmd - Branches Summary:')
-    print('--------------------------')
-
-    length = len(max((s[0] for s in summary), key=len)) + 3
-
-    for s in summary:
-        repo = s[0] + ':'
-        line = f'{repo:{length}} | {s[1]}'
-        print(line)
 
 def run_branches_commandlet(args):
     print('GitCmd - list the active branches for all repositories under the current directory.')
@@ -144,7 +133,7 @@ def run_branches_commandlet(args):
     for dir in list_dirs(os.path.curdir):
         summary.append((dir, git_branches(dir)))
 
-    print_branches_summary(summary)
+    print_simple_summary("Branches Summary", summary)
 
 # Commandlet setup
 # ----------------
