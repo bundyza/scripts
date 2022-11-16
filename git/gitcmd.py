@@ -14,6 +14,14 @@ def list_dirs(folder):
         if os.path.isdir(d)
     )
 
+def get_git_error(error):
+    msg = error.stderr
+
+    if len(msg) > 11:
+        return msg[11:]
+    
+    return msg
+
 def process_directory(subdir, handler):
     current_dir = os.getcwd()
 
@@ -29,9 +37,14 @@ def process_directory(subdir, handler):
         repo = git.Repo('.')
         return handler(repo)
 
+    except git.CommandError as e:
+        message = get_git_error(e)
+        print(f'Error - {message}')
+        return message
+
     except Exception as e:
-        print(f'Error: {e}')
-        return 'Error'
+        print(f'Error - {e}')
+        return f'{e}'
 
     finally:
         os.chdir(current_dir)
@@ -41,10 +54,10 @@ def print_simple_summary(title, summary):
     print(header)
     print('-' * len(header))
 
-    length = len(max((s[0] for s in summary), key=len)) + 3
+    length = len(max((s[0] for s in summary), key=len)) + 1
 
     for s in summary:
-        repo = s[0] + ':'
+        repo = s[0]
         line = f' - {repo:{length}} | {s[1]}'
         print(line)
 
@@ -140,14 +153,15 @@ def branches_commandlet(args):
 def create_parser():
     result = argparse.ArgumentParser(description='gitcmd - Git commandlet utility.')
 
-    commandlet_choices = ['pull','branches']
+    commandlet_choices = ['pull','actb']
     result.add_argument('commandlet', type=str, help='The Git commandlet to run for the repositories.', choices=commandlet_choices)
+
     return result
 
 def run_commandlets(args):
     commandlets = {
         'pull': pull_commandlet,
-        'branches': branches_commandlet
+        'actb': branches_commandlet
     }
 
     commandlet = args.commandlet
